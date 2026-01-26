@@ -1,0 +1,15 @@
+# Development override - build from source instead of pulling images
+# Usage: docker compose -f compose.yaml -f compose.dev.yaml up
+
+services:
+  api:
+    build: ./services/vortex-api
+    image: vortex-api:dev
+
+  app:
+    build: ./services/vortex-app
+    image: vortex-app:dev
+
+  worker:
+    build: ./services/vortex-worker
+    image: vortex-worker:dev
