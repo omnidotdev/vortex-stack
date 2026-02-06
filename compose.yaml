@@ -15,11 +15,25 @@ services:
     ports:
       - "${DB_PORT:-5432}:5432"
 
+  cache:
+    image: docker.io/dragonflydb/dragonfly:latest
+    command: ["--requirepass", "${CACHE_PASSWORD:?CACHE_PASSWORD is required}"]
+    volumes:
+      - cache_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${CACHE_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${CACHE_PORT:-6379}:6379"
+
   api:
     image: ghcr.io/omnidotdev/vortex-api:latest
     environment:
       SELF_HOSTED: "true"
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-vortex}
+      REDIS_URL: redis://default:${CACHE_PASSWORD}@cache:6379
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
       PORT: "4000"
       HOST: "0.0.0.0"
@@ -27,6 +41,8 @@ services:
       CORS_ALLOWED_ORIGINS: http://localhost:3000
     depends_on:
       db:
+        condition: service_healthy
+      cache:
         condition: service_healthy
     ports:
       - "${API_PORT:-4000}:4000"
@@ -57,9 +73,13 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-vortex}
+      REDIS_URL: redis://default:${CACHE_PASSWORD}@cache:6379
     depends_on:
       db:
+        condition: service_healthy
+      cache:
         condition: service_healthy
 
 volumes:
   db_data:
+  cache_data:
