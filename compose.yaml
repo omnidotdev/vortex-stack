@@ -33,7 +33,7 @@ services:
     environment:
       SELF_HOSTED: "true"
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-vortex}
-      REDIS_URL: redis://default:${CACHE_PASSWORD}@cache:6379
+      CACHE_URL: redis://default:${CACHE_PASSWORD}@cache:6379
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
       PORT: "4000"
       HOST: "0.0.0.0"
@@ -73,7 +73,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-vortex}
-      REDIS_URL: redis://default:${CACHE_PASSWORD}@cache:6379
+      CACHE_URL: redis://default:${CACHE_PASSWORD}@cache:6379
     depends_on:
       db:
         condition: service_healthy
