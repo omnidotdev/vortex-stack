@@ -16,8 +16,8 @@ services:
       - "${DB_PORT:-5432}:5432"
 
   cache:
-    image: docker.io/dragonflydb/dragonfly:latest
-    command: ["--requirepass", "${CACHE_PASSWORD:?CACHE_PASSWORD is required}"]
+    image: docker.io/valkey/valkey:8-alpine
+    command: ["valkey-server", "--requirepass", "${CACHE_PASSWORD:?CACHE_PASSWORD is required}"]
     volumes:
       - cache_data:/data
     healthcheck:
