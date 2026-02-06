@@ -9,3 +9,10 @@
 !compose.yaml
 !compose.dev.yaml
 !.env.local.template
+
+# SDK packages
+!packages/
+!packages/vortex-events/
+!packages/vortex-events/**
+packages/vortex-events/node_modules/
+packages/vortex-events/dist/
