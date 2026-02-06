@@ -28,12 +28,38 @@ services:
     ports:
       - "${CACHE_PORT:-6379}:6379"
 
+  events:
+    image: apache/iggy:latest
+    restart: unless-stopped
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - seccomp:unconfined
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    environment:
+      IGGY_ROOT_USERNAME: ${IGGY_USERNAME:-iggy}
+      IGGY_ROOT_PASSWORD: ${IGGY_PASSWORD:-iggy}
+    volumes:
+      - events_data:/local_data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${EVENTS_TCP_PORT:-8090}:8090"
+      - "${EVENTS_HTTP_PORT:-8080}:8080"
+
   api:
     image: ghcr.io/omnidotdev/vortex-api:latest
     environment:
       SELF_HOSTED: "true"
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-vortex}
       CACHE_URL: redis://default:${CACHE_PASSWORD}@cache:6379
+      EVENTS_URL: iggy://events:8090
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
       PORT: "4000"
       HOST: "0.0.0.0"
@@ -43,6 +69,8 @@ services:
       db:
         condition: service_healthy
       cache:
+        condition: service_healthy
+      events:
         condition: service_healthy
     ports:
       - "${API_PORT:-4000}:4000"
@@ -74,12 +102,16 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-vortex}
       CACHE_URL: redis://default:${CACHE_PASSWORD}@cache:6379
+      EVENTS_URL: iggy://events:8090
     depends_on:
       db:
         condition: service_healthy
       cache:
         condition: service_healthy
+      events:
+        condition: service_healthy
 
 volumes:
   db_data:
   cache_data:
+  events_data:
