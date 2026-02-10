@@ -8,7 +8,6 @@
 !Tiltfile
 !compose.yaml
 !compose.dev.yaml
-!.env.local.template
 
 # SDK packages
 !packages/
