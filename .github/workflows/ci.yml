@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  check:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (vortex-api)
+        working-directory: services/vortex-api
+        run: bun install --frozen-lockfile
+
+      - name: Install dependencies (vortex-app)
+        working-directory: services/vortex-app
+        run: bun install --frozen-lockfile
+
+      - name: Install dependencies (vortex-worker)
+        working-directory: services/vortex-worker
+        run: bun install --frozen-lockfile
+
+      - name: Check catalog freshness
+        working-directory: services/vortex-api
+        run: bun catalog:check
+
+      - name: Lint (vortex-api)
+        working-directory: services/vortex-api
+        run: bun check
+
+      - name: Lint (vortex-app)
+        working-directory: services/vortex-app
+        run: bun check
+
+      - name: Lint (vortex-worker)
+        working-directory: services/vortex-worker
+        run: bun check
+
+      - name: Type check (vortex-api)
+        working-directory: services/vortex-api
+        run: bunx tsc --noEmit
+
+      - name: Type check (vortex-app)
+        working-directory: services/vortex-app
+        run: bunx tsc --noEmit
+
+      - name: Type check (vortex-worker)
+        working-directory: services/vortex-worker
+        run: bunx tsc --noEmit
+
+      - name: Knip (vortex-api)
+        working-directory: services/vortex-api
+        run: bun knip
+
+      - name: Knip (vortex-app)
+        working-directory: services/vortex-app
+        run: bun knip
+
+      - name: Knip (vortex-worker)
+        working-directory: services/vortex-worker
+        run: bun knip
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vortex
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (vortex-api)
+        working-directory: services/vortex-api
+        run: bun install --frozen-lockfile
+
+      - name: Install dependencies (vortex-app)
+        working-directory: services/vortex-app
+        run: bun install --frozen-lockfile
+
+      - name: Install dependencies (vortex-worker)
+        working-directory: services/vortex-worker
+        run: bun install --frozen-lockfile
+
+      - name: Run migrations (vortex-api)
+        working-directory: services/vortex-api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vortex
+        run: bunx drizzle-kit migrate --config src/lib/config/drizzle.config.ts
+
+      # NB: vortex-api tests are split into separate invocations because
+      # Bun runs all test files in one process and mock.module() leaks
+      # across files, breaking tests that need real module imports.
+      # workflows/execution.test.ts is excluded — it needs Gatekeeper + Hatchet.
+      - name: Test unit (vortex-api)
+        working-directory: services/vortex-api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vortex
+          AUTH_BASE_URL: http://localhost:8000
+          CORS_ALLOWED_ORIGINS: http://localhost:3000
+          HATCHET_CLIENT_TOKEN: test-token
+          ENCRYPTION_KEY: dy0jCcMkkhD1MLuKLdroeL1EClV0v7RaaqudbwyMjbY=
+        run: bun test src/__tests__/*.test.ts
+
+      - name: Test auth (vortex-api)
+        working-directory: services/vortex-api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vortex
+          AUTH_BASE_URL: http://localhost:8000
+          CORS_ALLOWED_ORIGINS: http://localhost:3000
+          HATCHET_CLIENT_TOKEN: test-token
+          ENCRYPTION_KEY: dy0jCcMkkhD1MLuKLdroeL1EClV0v7RaaqudbwyMjbY=
+        run: bun test src/__tests__/auth/
+
+      - name: Test integration (vortex-api)
+        working-directory: services/vortex-api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vortex
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vortex
+          AUTH_BASE_URL: http://localhost:8000
+          CORS_ALLOWED_ORIGINS: http://localhost:3000
+          HATCHET_CLIENT_TOKEN: test-token
+          ENCRYPTION_KEY: dy0jCcMkkhD1MLuKLdroeL1EClV0v7RaaqudbwyMjbY=
+        run: bun test src/__tests__/integration/
+
+      - name: Test (vortex-app)
+        working-directory: services/vortex-app
+        run: bun test
+
+      - name: Test (vortex-worker)
+        working-directory: services/vortex-worker
+        run: bun test

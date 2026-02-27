@@ -2,6 +2,8 @@
 *
 
 !.gitignore
+!.github/
+!.github/**
 !LICENSE.md
 !README.md
 !services.yaml.template
