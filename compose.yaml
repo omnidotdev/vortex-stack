@@ -29,7 +29,7 @@ services:
       - "${CACHE_PORT:-6379}:6379"
 
   events:
-    image: apache/iggy:latest
+    image: apache/iggy:0.6.87
     restart: unless-stopped
     cap_add:
       - SYS_NICE
@@ -40,8 +40,8 @@ services:
         soft: -1
         hard: -1
     environment:
-      IGGY_ROOT_USERNAME: ${IGGY_USERNAME:-iggy}
-      IGGY_ROOT_PASSWORD: ${IGGY_PASSWORD:-iggy}
+      IGGY_ROOT_USERNAME: ${IGGY_USERNAME:?IGGY_USERNAME is required}
+      IGGY_ROOT_PASSWORD: ${IGGY_PASSWORD:?IGGY_PASSWORD is required}
     volumes:
       - events_data:/local_data
     healthcheck:
@@ -73,6 +73,12 @@ services:
         condition: service_healthy
     ports:
       - "${API_PORT:-4000}:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   app:
     image: ghcr.io/omnidotdev/vortex-app:latest
@@ -93,6 +99,12 @@ services:
       - api
     ports:
       - "${APP_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   worker:
     image: ghcr.io/omnidotdev/vortex-worker:latest
@@ -108,6 +120,12 @@ services:
         condition: service_healthy
       events:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
 volumes:
   db_data:
