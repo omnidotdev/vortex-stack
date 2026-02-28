@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vortex.fullname" . }}-app
+  labels:
+    {{- include "vortex.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      {{- include "vortex.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      labels:
+        {{- include "vortex.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: app
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.port }}
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: auth-secret
+            {{- with .Values.app.baseUrl }}
+            - name: VITE_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            - name: VITE_API_BASE_URL
+              value: "http://{{ include "vortex.fullname" . }}-api:{{ .Values.api.port }}"
+            {{- with .Values.app.auth.baseUrl }}
+            - name: VITE_AUTH_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.app.auth.clientId }}
+            - name: AUTH_CLIENT_ID
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.app.auth.clientSecret }}
+            - name: AUTH_CLIENT_SECRET
+              value: {{ . | quote }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /api/_health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/_health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}

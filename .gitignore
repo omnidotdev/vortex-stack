@@ -10,3 +10,6 @@
 !Tiltfile
 !compose.yaml
 !compose.dev.yaml
+!charts/
+!charts/**
+charts/*/charts/

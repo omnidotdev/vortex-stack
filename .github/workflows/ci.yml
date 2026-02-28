@@ -69,6 +69,34 @@ jobs:
         working-directory: services/vortex-worker
         run: bun knip
 
+      - name: Install dependencies (vortex-sdk)
+        working-directory: services/vortex-sdk
+        run: bun install --frozen-lockfile
+
+      - name: Lint (vortex-sdk)
+        working-directory: services/vortex-sdk
+        run: bun check
+
+      - name: Type check (vortex-sdk)
+        working-directory: services/vortex-sdk
+        run: bunx tsc --noEmit
+
+      - name: Install dependencies (vortex-cli)
+        working-directory: services/vortex-cli
+        run: bun install --frozen-lockfile
+
+      - name: Lint (vortex-cli)
+        working-directory: services/vortex-cli
+        run: bun lint
+
+      - name: Type check (vortex-cli)
+        working-directory: services/vortex-cli
+        run: bunx tsc --noEmit
+
+      - name: Build (vortex-cli)
+        working-directory: services/vortex-cli
+        run: bun run build
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -162,3 +190,15 @@ jobs:
       - name: Test (vortex-worker)
         working-directory: services/vortex-worker
         run: bun test
+
+      - name: Install dependencies (vortex-sdk)
+        working-directory: services/vortex-sdk
+        run: bun install --frozen-lockfile
+
+      - name: Test (vortex-sdk)
+        working-directory: services/vortex-sdk
+        run: bun test
+
+      - name: Build (vortex-sdk)
+        working-directory: services/vortex-sdk
+        run: bun run build

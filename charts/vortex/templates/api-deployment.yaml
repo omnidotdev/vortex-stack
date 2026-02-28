@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vortex.fullname" . }}-api
+  labels:
+    {{- include "vortex.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      {{- include "vortex.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "vortex.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.port }}
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: database-url
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: encryption-key
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: hatchet-client-token
+            - name: INTERNAL_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: internal-api-secret
+            - name: WORKER_URL
+              value: "http://{{ include "vortex.fullname" . }}-worker:{{ .Values.worker.healthPort }}"
+            - name: PORT
+              value: {{ .Values.api.port | quote }}
+            - name: HOST
+              value: "0.0.0.0"
+            - name: NODE_ENV
+              value: production
+            {{- with .Values.api.corsAllowedOrigins }}
+            - name: CORS_ALLOWED_ORIGINS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.auth.baseUrl }}
+            - name: AUTH_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.aether.baseUrl }}
+            - name: AETHER_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.billingWebhookSecret }}
+            - name: BILLING_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: billing-webhook-secret
+            {{- end }}
+            {{- if .Values.secrets.idpWebhookSecret }}
+            - name: IDP_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: idp-webhook-secret
+            {{- end }}
+            - name: PROTECT_ROUTES
+              value: "true"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}

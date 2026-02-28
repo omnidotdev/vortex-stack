@@ -1,0 +1,103 @@
+# Vortex Helm chart values
+
+# -- API (GraphQL + REST)
+api:
+  image:
+    repository: manifold.omni.dev/omni/vortex-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 4000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  corsAllowedOrigins: ""
+  auth:
+    baseUrl: ""
+  aether:
+    baseUrl: ""
+
+# -- App (Dashboard)
+app:
+  image:
+    repository: manifold.omni.dev/omni/vortex-app
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  baseUrl: ""
+  auth:
+    baseUrl: ""
+    clientId: ""
+    clientSecret: ""
+
+# -- Worker (DSL executor)
+worker:
+  image:
+    repository: manifold.omni.dev/omni/vortex-worker
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  healthPort: 8080
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+  executor: hatchet
+  events:
+    url: ""
+
+# -- Secrets (required)
+secrets:
+  authSecret: ""
+  encryptionKey: ""
+  hatchetClientToken: ""
+  internalApiSecret: ""
+  billingWebhookSecret: ""
+  idpWebhookSecret: ""
+  iggyUsername: ""
+  iggyPassword: ""
+
+# -- PostgreSQL (Bitnami subchart)
+postgresql:
+  enabled: true
+  auth:
+    database: vortex
+    username: postgres
+    password: ""
+  primary:
+    persistence:
+      size: 10Gi
+
+# -- External database (when postgresql.enabled=false)
+externalDatabase:
+  host: ""
+  port: 5432
+  database: vortex
+  username: postgres
+  password: ""
+
+# -- Ingress
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  api:
+    host: api.vortex.example.com
+  app:
+    host: vortex.example.com
+  tls: []

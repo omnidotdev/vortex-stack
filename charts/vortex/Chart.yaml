@@ -1,0 +1,20 @@
+apiVersion: v2
+name: vortex
+description: Workflow automation for the decentralized web
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://vortex.omni.dev
+sources:
+  - https://github.com/omnidotdev/vortex-api
+  - https://github.com/omnidotdev/vortex-app
+  - https://github.com/omnidotdev/vortex-worker
+maintainers:
+  - name: Omni
+    url: https://omni.dev
+
+dependencies:
+  - name: postgresql
+    version: "16.4.7"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled

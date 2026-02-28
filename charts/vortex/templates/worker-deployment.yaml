@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vortex.fullname" . }}-worker
+  labels:
+    {{- include "vortex.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "vortex.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "vortex.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      containers:
+        - name: worker
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          ports:
+            - name: health
+              containerPort: {{ .Values.worker.healthPort }}
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: database-url
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: hatchet-client-token
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: encryption-key
+            - name: INTERNAL_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: internal-api-secret
+            - name: VORTEX_EXECUTOR
+              value: {{ .Values.worker.executor | quote }}
+            - name: HEALTH_PORT
+              value: {{ .Values.worker.healthPort | quote }}
+            - name: NODE_ENV
+              value: production
+            {{- with .Values.worker.events.url }}
+            - name: EVENTS_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.iggyUsername }}
+            - name: IGGY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: iggy-username
+            {{- end }}
+            {{- if .Values.secrets.iggyPassword }}
+            - name: IGGY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: iggy-password
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
