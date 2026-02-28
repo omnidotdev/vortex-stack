@@ -3,7 +3,7 @@
 # -- API (GraphQL + REST)
 api:
   image:
-    repository: manifold.omni.dev/omni/vortex-api
+    repository: ghcr.io/omnidotdev/vortex-api
     tag: latest
     pullPolicy: IfNotPresent
   replicas: 1
@@ -24,7 +24,7 @@ api:
 # -- App (Dashboard)
 app:
   image:
-    repository: manifold.omni.dev/omni/vortex-app
+    repository: ghcr.io/omnidotdev/vortex-app
     tag: latest
     pullPolicy: IfNotPresent
   replicas: 1
@@ -45,7 +45,7 @@ app:
 # -- Worker (DSL executor)
 worker:
   image:
-    repository: manifold.omni.dev/omni/vortex-worker
+    repository: ghcr.io/omnidotdev/vortex-worker
     tag: latest
     pullPolicy: IfNotPresent
   replicas: 1
