@@ -1,0 +1,305 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vortex.fullname" . }}-api
+  labels:
+    {{- include "vortex.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      {{- include "vortex.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "vortex.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.port }}
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: database-url
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: encryption-key
+            - name: HATCHET_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: hatchet-client-token
+            {{- with .Values.api.hatchet.tlsStrategy }}
+            - name: HATCHET_CLIENT_TLS_STRATEGY
+              value: {{ . | quote }}
+            {{- end }}
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: auth-secret
+            - name: INTERNAL_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: internal-api-secret
+            - name: WORKER_URL
+              value: "http://{{ include "vortex.fullname" . }}-worker:{{ .Values.worker.healthPort }}"
+            - name: PORT
+              value: {{ .Values.api.port | quote }}
+            - name: HOST
+              value: "0.0.0.0"
+            - name: NODE_ENV
+              value: production
+            {{- with .Values.api.corsAllowedOrigins }}
+            - name: CORS_ALLOWED_ORIGINS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.auth.baseUrl }}
+            - name: AUTH_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.billingWebhookSecret }}
+            - name: BILLING_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: billing-webhook-secret
+            {{- end }}
+            {{- if .Values.secrets.idpWebhookSecret }}
+            - name: IDP_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: idp-webhook-secret
+            {{- end }}
+            {{- with .Values.api.cache.url }}
+            - name: CACHE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.events.url }}
+            - name: EVENTS_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.iggyUsername }}
+            - name: IGGY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: iggy-username
+            {{- end }}
+            {{- if .Values.secrets.iggyPassword }}
+            - name: IGGY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: iggy-password
+            {{- end }}
+            {{- with .Values.api.publicUrl }}
+            - name: VORTEX_PUBLIC_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.stripeApiKey }}
+            - name: STRIPE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: stripe-api-key
+            {{- end }}
+            {{- if .Values.secrets.stripeWebhookSecret }}
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: stripe-webhook-secret
+            {{- end }}
+            {{- if .Values.secrets.emailWebhookSecret }}
+            - name: EMAIL_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: email-webhook-secret
+            {{- end }}
+            - name: PROTECT_ROUTES
+              value: "true"
+            {{- with .Values.api.logLevel }}
+            - name: LOG_LEVEL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.graphqlMaxComplexityCost }}
+            - name: GRAPHQL_MAX_COMPLEXITY_COST
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.authDebug }}
+            - name: AUTH_DEBUG
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.billing.baseUrl }}
+            - name: BILLING_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.billingServiceApiKey }}
+            - name: BILLING_SERVICE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: billing-service-api-key
+            {{- end }}
+            {{- with .Values.api.authz.enabled }}
+            - name: AUTHZ_ENABLED
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.authz.apiUrl }}
+            - name: AUTHZ_API_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.wardenServiceKey }}
+            - name: AUTHZ_SERVICE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: warden-service-key
+            {{- end }}
+            {{- if .Values.secrets.authzWebhookSecret }}
+            - name: AUTHZ_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: authz-webhook-secret
+            {{- end }}
+            {{- if .Values.secrets.searchBootstrapWebhookSecret }}
+            - name: SEARCH_BOOTSTRAP_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: search-bootstrap-webhook-secret
+            {{- end }}
+            {{- if .Values.secrets.auditWebhookSecret }}
+            - name: AUDIT_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: audit-webhook-secret
+            {{- end }}
+            {{- if .Values.secrets.authWebhookSecret }}
+            - name: AUTH_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: auth-webhook-secret
+            {{- end }}
+            {{- with .Values.api.platformOrgId }}
+            - name: PLATFORM_ORG_ID
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.temporal.address }}
+            - name: TEMPORAL_ADDRESS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.temporal.namespace }}
+            - name: TEMPORAL_NAMESPACE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.temporal.taskQueue }}
+            - name: TEMPORAL_TASK_QUEUE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.pluginStorage.bucket }}
+            - name: PLUGIN_STORAGE_BUCKET
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.pluginStorage.baseUrl }}
+            - name: PLUGIN_STORAGE_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.secrets.githubOauthClientId }}
+            - name: GITHUB_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: github-oauth-client-id
+            {{- end }}
+            {{- if .Values.secrets.githubOauthClientSecret }}
+            - name: GITHUB_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: github-oauth-client-secret
+            {{- end }}
+            {{- if .Values.secrets.discordOauthClientId }}
+            - name: DISCORD_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: discord-oauth-client-id
+            {{- end }}
+            {{- if .Values.secrets.discordOauthClientSecret }}
+            - name: DISCORD_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: discord-oauth-client-secret
+            {{- end }}
+            {{- if .Values.secrets.slackOauthClientId }}
+            - name: SLACK_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: slack-oauth-client-id
+            {{- end }}
+            {{- if .Values.secrets.slackOauthClientSecret }}
+            - name: SLACK_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: slack-oauth-client-secret
+            {{- end }}
+            {{- if .Values.secrets.googleOauthClientId }}
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: google-oauth-client-id
+            {{- end }}
+            {{- if .Values.secrets.googleOauthClientSecret }}
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vortex.fullname" . }}
+                  key: google-oauth-client-secret
+            {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}

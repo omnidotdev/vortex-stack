@@ -1,0 +1,182 @@
+# Vortex Helm chart values
+
+imagePullSecrets: []
+
+# -- API (GraphQL + REST)
+api:
+  image:
+    repository: manifold.omni.dev/omnidotdev/vortex-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 4000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  corsAllowedOrigins: ""
+  publicUrl: ""
+  hatchet:
+    tlsStrategy: "none"
+  logLevel: ""
+  graphqlMaxComplexityCost: "5000"
+  authDebug: ""
+  auth:
+    baseUrl: ""
+  billing:
+    baseUrl: ""
+  authz:
+    enabled: ""
+    apiUrl: ""
+  cache:
+    url: ""
+  events:
+    url: ""
+  temporal:
+    address: ""
+    namespace: ""
+    taskQueue: ""
+  platformOrgId: ""
+  pluginStorage:
+    bucket: ""
+    baseUrl: ""
+
+# -- App (Dashboard)
+app:
+  image:
+    repository: manifold.omni.dev/omnidotdev/vortex-app
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  baseUrl: ""
+  auth:
+    baseUrl: ""
+    clientId: ""
+    clientSecret: ""
+  billing:
+    baseUrl: ""
+    internalUrl: ""
+  authz:
+    apiUrl: ""
+
+# -- Worker (DSL executor)
+worker:
+  image:
+    repository: manifold.omni.dev/omnidotdev/vortex-worker
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  healthPort: 8080
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+  executor: hatchet
+  hatchet:
+    tlsStrategy: "none"
+  logLevel: ""
+  vortexApiUrl: ""
+  vortexPublicUrl: ""
+  vortexCallbackBaseUrl: ""
+  events:
+    url: ""
+  cache:
+    url: ""
+  warden:
+    apiUrl: ""
+  aether:
+    apiUrl: ""
+  chronicle:
+    apiUrl: ""
+  mantle:
+    apiUrl: ""
+  gatekeeper:
+    apiUrl: ""
+  meilisearch:
+    url: ""
+  runa:
+    apiUrl: ""
+  temporal:
+    address: ""
+    namespace: ""
+    taskQueue: ""
+
+# -- Secrets (required)
+secrets:
+  authSecret: ""
+  encryptionKey: ""
+  hatchetClientToken: ""
+  internalApiSecret: ""
+  authClientSecret: ""
+  billingWebhookSecret: ""
+  idpWebhookSecret: ""
+  iggyUsername: ""
+  iggyPassword: ""
+  billingServiceApiKey: ""
+  authWebhookSecret: ""
+  authzWebhookSecret: ""
+  searchBootstrapWebhookSecret: ""
+  auditWebhookSecret: ""
+  resendApiKey: ""
+  wardenServiceKey: ""
+  mantleServiceKey: ""
+  aetherServiceApiKey: ""
+  emailRenderSecret: ""
+  meilisearchMasterKey: ""
+  # -- OAuth provider credentials
+  githubOauthClientId: ""
+  githubOauthClientSecret: ""
+  discordOauthClientId: ""
+  discordOauthClientSecret: ""
+  slackOauthClientId: ""
+  slackOauthClientSecret: ""
+  googleOauthClientId: ""
+  googleOauthClientSecret: ""
+  # -- Optional (SaaS features)
+  stripeApiKey: ""
+  stripeWebhookSecret: ""
+  emailWebhookSecret: ""
+
+# -- PostgreSQL (Bitnami subchart)
+postgresql:
+  enabled: true
+  auth:
+    database: vortex
+    username: postgres
+    password: ""
+  primary:
+    persistence:
+      size: 10Gi
+
+# -- External database (when postgresql.enabled=false)
+externalDatabase:
+  host: ""
+  port: 5432
+  database: vortex
+  username: postgres
+  password: ""
+
+# -- Ingress
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  api:
+    host: api.vortex.example.com
+  app:
+    host: vortex.example.com
+  tls: []

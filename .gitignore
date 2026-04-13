@@ -1,0 +1,18 @@
+# ignore all by default
+*
+
+!.gitignore
+!.github/
+!.github/**
+!LICENSE.md
+!README.md
+!services.yaml.template
+!Tiltfile
+!compose.yaml
+!compose.dev.yaml
+!.env.local.template
+!weaver.yaml
+!renovate.json
+!charts/
+!charts/**
+charts/*/charts/
