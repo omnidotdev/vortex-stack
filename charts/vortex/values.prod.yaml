@@ -1,0 +1,78 @@
+imagePullSecrets:
+  - name: manifold-registry
+
+ingress:
+  enabled: true
+  className: nginx
+  api:
+    host: api.vortex.omni.dev
+  app:
+    host: vortex.omni.dev
+  tls:
+    - secretName: vortex-tls
+      hosts: [api.vortex.omni.dev, vortex.omni.dev]
+
+api:
+  replicas: 2
+  image:
+    pullPolicy: Always
+  hatchet:
+    tlsStrategy: "none"
+  corsAllowedOrigins: "https://vortex.omni.dev"
+  publicUrl: "https://api.vortex.omni.dev"
+  auth:
+    baseUrl: "https://identity.omni.dev"
+  billing:
+    baseUrl: "http://aether-api:4000"
+  cache:
+    url: "redis://default:@vortex-cache:6379"
+  events:
+    url: "iggy://vortex-events:8090"
+  authz:
+    enabled: "true"
+    apiUrl: "http://openfga.omni-system.svc.cluster.local:3476"
+
+worker:
+  image:
+    pullPolicy: Always
+  hatchet:
+    tlsStrategy: "none"
+  vortexApiUrl: "http://vortex-api:4000"
+  vortexPublicUrl: "https://api.vortex.omni.dev"
+  vortexCallbackBaseUrl: "https://vortex.omni.dev"
+  cache:
+    url: "redis://default:@vortex-cache:6379"
+  events:
+    url: "iggy://vortex-events:8090"
+  gatekeeper:
+    apiUrl: "http://gatekeeper-api:4000"
+  warden:
+    apiUrl: "http://openfga.omni-system.svc.cluster.local:3476"
+  aether:
+    apiUrl: "http://aether-api:4000"
+  chronicle:
+    apiUrl: "http://chronicle-api:4000"
+  meilisearch:
+    url: "http://meilisearch.omni-system.svc.cluster.local:7700"
+  mantle:
+    apiUrl: "http://mantle-api:4000"
+  runa:
+    apiUrl: "http://runa-api:4000"
+
+app:
+  replicas: 2
+  image:
+    pullPolicy: Always
+  baseUrl: "https://vortex.omni.dev"
+  cache:
+    url: "redis://default:@vortex-cache:6379"
+  auth:
+    baseUrl: "https://identity.omni.dev"
+    # override via sealed secret or --set at deploy time
+    clientId: ""
+    clientSecret: ""
+  billing:
+    baseUrl: "https://api.billing.omni.dev"
+    internalUrl: "http://aether-api:4000"
+  authz:
+    apiUrl: "https://api.access.omni.dev"

@@ -1,0 +1,21 @@
+# Build from source instead of pulling pre-built images.
+#
+# Use this override for local development or self-hosted deployments
+# where the Omni container registry (manifold.omni.dev) is not accessible.
+#
+# Usage:
+#   cp .env.local.template .env.local   # fill in values
+#   docker compose -f compose.yaml -f compose.dev.yaml up --build
+
+services:
+  api:
+    build: ./services/vortex-api
+    image: vortex-api:dev
+
+  app:
+    build: ./services/vortex-app
+    image: vortex-app:dev
+
+  worker:
+    build: ./services/vortex-worker
+    image: vortex-worker:dev
