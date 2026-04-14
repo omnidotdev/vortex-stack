@@ -11,6 +11,8 @@
 !compose.yaml
 !compose.dev.yaml
 !.env.local.template
+!weaver.yaml
+!renovate.json
 !charts/
 !charts/**
 charts/*/charts/
