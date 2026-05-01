@@ -36,7 +36,7 @@ services:
       - "${CACHE_PORT:-6379}:6379"
 
   events:
-    image: apache/iggy:0.7.0
+    image: apache/iggy:0.8.0
     restart: unless-stopped
     cap_add:
       - SYS_NICE
