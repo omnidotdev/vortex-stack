@@ -8,7 +8,7 @@ Workflow automation and orchestration engine
 
 </div>
 
-Vortex is [Omni](https://omni.dev)'s workflow automation platform. Build workflows visually with a drag-and-drop editor, define them as JSON, or create them programmatically with the TypeScript SDK. All three formats round-trip to each other.
+Vortex is [Omni](https://omni.dev)'s workflow automation platform. Build workflows visually with a drag-and-drop editor or define them as JSON. Both formats round-trip to each other.
 
 ## Architecture
 
@@ -48,18 +48,18 @@ tilt up
 
 ## Self-Hosting
 
-Self-host the full Vortex stack with Docker Compose:
+Self-host the full Vortex stack with Docker Compose. Build from source (the default `compose.yaml` pulls images from the Omni registry, which is private):
 
 ```sh
 cp .env.local.template .env.local   # fill in required values
-docker compose up --build
+docker compose -f compose.yaml -f compose.dev.yaml up --build
 ```
 
-See `.env.local.template` for a full list of required and optional environment variables. For Kubernetes deployments, see the [Mosaic infra repo](https://github.com/omnidotdev/infra).
+Vortex requires a reachable identity provider (Gatekeeper or any OIDC) and a Hatchet worker pool for execution. Set `AUTH_BASE_URL` and `HATCHET_CLIENT_TOKEN` before bringing the stack up. See `.env.local.template` for the full list of required and optional environment variables. For Kubernetes deployments, see the [Omni infra repo](https://github.com/omnidotdev/infra).
 
 ## Development Commands
 
-These commands apply per service (run from within each service directory):
+Run these from within each service directory:
 
 | Command | Description |
 |---------|-------------|
@@ -69,9 +69,14 @@ These commands apply per service (run from within each service directory):
 | `bun test` | Run tests |
 | `bun lint` | Lint with Biome |
 | `bun format` | Format with Biome |
-| `bun db:migrate` | Run database migrations (API) |
-| `bun db:seed` | Seed database (API) |
-| `bun db:studio` | Open Drizzle Studio (API) |
+
+API-only:
+
+| Command | Description |
+|---------|-------------|
+| `bun db:migrate` | Run database migrations |
+| `bun db:seed` | Seed database |
+| `bun db:studio` | Open Drizzle Studio |
 
 ## Documentation
 
