@@ -1,0 +1,31 @@
+# Vortex - Workflow Automation Platform
+# Visual workflow builder, event-driven automation, DSL execution
+
+workspace: .
+
+repositories:
+  vortex:
+    url: git@github.com:omnidotdev/vortex.git
+    path: .
+    tags: [workflows, metarepo]
+    description: Workflow Automation Platform
+
+  vortex-api:
+    url: git@github.com:omnidotdev/vortex-api.git
+    path: ./services/vortex-api
+    tags: [workflows, backend]
+    description: Workflow automation API
+
+  vortex-app:
+    url: git@github.com:omnidotdev/vortex-app.git
+    path: ./services/vortex-app
+    depends_on: [vortex-api]
+    tags: [workflows, frontend]
+    description: Workflow editor and dashboard
+
+  vortex-worker:
+    url: git@github.com:omnidotdev/vortex-worker.git
+    path: ./services/vortex-worker
+    depends_on: [vortex-api]
+    tags: [workflows, backend]
+    description: Workflow DSL executor and trigger adapter runtime
