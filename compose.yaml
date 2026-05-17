@@ -5,7 +5,7 @@
 
 services:
   db:
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:96d56f7f57c6aacd1fcb908bc83b345ec5f83231ee486dd66a1baadce274db88
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-vortex}
@@ -22,7 +22,7 @@ services:
       - "${DB_PORT:-5432}:5432"
 
   cache:
-    image: docker.io/valkey/valkey:8-alpine
+    image: docker.io/valkey/valkey:8-alpine@sha256:b027235326507cfdade9b6684056ec1d0b0c0757412e628245129b5d7b788618
     restart: unless-stopped
     command: ["valkey-server", "--requirepass", "${CACHE_PASSWORD:?CACHE_PASSWORD is required}"]
     volumes:
@@ -36,7 +36,7 @@ services:
       - "${CACHE_PORT:-6379}:6379"
 
   events:
-    image: apache/iggy:0.7.0
+    image: apache/iggy:0.7.0@sha256:17a1a87f660e79cf0c39daeb95e84bd0c9af8bcfeae7ddde925064f5eb35e4ae
     restart: unless-stopped
     cap_add:
       - SYS_NICE
