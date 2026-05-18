@@ -18,23 +18,25 @@ Vortex is [Omni](https://omni.dev)'s workflow automation platform. Build workflo
 | [vortex-app](services/vortex-app) | Visual workflow editor (React 19, TanStack Start, ReactFlow) |
 | [vortex-worker](services/vortex-worker) | DSL executor with pluggable backends (Hatchet, Temporal, local) |
 
-## Prerequisites
+## Setup
+
+Prerequisites:
 
 - [Tilt](https://tilt.dev) (local dev)
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose v2 (self-hosting)
 - [Bun](https://bun.sh) (service development)
 
-## Local Development
-
-1. Copy the template configuration:
+Copy the template configuration:
 
 ```sh
 cp services.yaml.template services.yaml
 ```
 
-2. Configure services as needed. To disable a service, comment it out. Any included services will be locally cloned.
+Configure services as needed. To disable a service, comment it out. Any included services will be locally cloned.
 
-3. Start the development environment:
+## Run
+
+Start the local dev environment with Tilt:
 
 ```sh
 tilt up
@@ -46,18 +48,42 @@ tilt up
 > [!WARNING]
 > Services have their own setup requirements (env vars, database migrations). Consult each service README before running.
 
-## Self-Hosting
+## Deployment
 
-Self-host the full Vortex stack with Docker Compose. Build from source (the default `compose.yaml` pulls images from the Omni registry, which is private):
+> Production: Pulumi (Omni-internal). Self-host: docker compose. We do not publish a Helm chart at this time.
+
+### Self-hosting
+
+Run the full stack with Docker Compose, building from source:
 
 ```sh
 cp .env.local.template .env.local   # fill in required values
 docker compose -f compose.yaml -f compose.dev.yaml up --build
 ```
 
-Vortex requires a reachable identity provider (Gatekeeper or any OIDC) and a Hatchet worker pool for execution. Set `AUTH_BASE_URL` and `HATCHET_CLIENT_TOKEN` before bringing the stack up. See `.env.local.template` for the full list of required and optional environment variables. For Kubernetes deployments, see the [Omni infra repo](https://github.com/omnidotdev/infra).
+The default `compose.yaml` pulls images from the Omni registry (private); the `compose.dev.yaml` override builds locally from the service repos cloned into `services/`.
 
-## Development Commands
+External services required:
+
+- **Identity provider**: Gatekeeper or any OIDC issuer. Set `AUTH_BASE_URL` (and OAuth client envs if applicable) before bringing the stack up.
+- **Hatchet**: Workflow executor. Set `HATCHET_CLIENT_TOKEN` (and `HATCHET_CLIENT_TLS_STRATEGY` for local instances).
+
+See `.env.local.template` for the full list of required and optional environment variables.
+
+### Omni production
+
+Production Vortex is deployed via [Pulumi](https://www.pulumi.com) from the internal `omnidotdev/infra` repository. Not user-facing.
+
+## Diagnostics
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /health` | Liveness check (API, worker) |
+| `GET /ready`  | Readiness check (API, including DB) |
+
+Tail logs from a Compose stack with `docker compose logs -f <service>`. Under Tilt, use the Tilt UI to inspect per-service logs and resource status.
+
+## Dev Commands
 
 Run these from within each service directory:
 
