@@ -1,0 +1,17 @@
+services:
+  # ----------------------------
+  # service-name:
+  #   repo: repository URL (required)
+  #   path: local path (optional, defaults to `services/service-name`; example: ../repo-path)
+  #   env: array of environment variables to set (optional); example:
+  #
+  #        env:
+  #          - TILT_CUSTOM_REPO_ENV_PATH: ../repo-path/.env.local
+  #
+  # ----------------------------
+  - vortex-api:
+      repo: https://github.com/omnidotdev/vortex-api#master
+  - vortex-app:
+      repo: https://github.com/omnidotdev/vortex-app#master
+  - vortex-worker:
+      repo: https://github.com/omnidotdev/vortex-worker#master
