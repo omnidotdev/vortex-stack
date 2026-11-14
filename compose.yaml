@@ -22,7 +22,7 @@ services:
       - "${DB_PORT:-5432}:5432"
 
   cache:
-    image: docker.io/valkey/valkey:8-alpine
+    image: docker.io/valkey/valkey:9-alpine@sha256:bf09d58e96d6b4524a15396b65b242bbe18beebbcc15a04d8ee75ddac62fae0b
     restart: unless-stopped
     command: ["valkey-server", "--requirepass", "${CACHE_PASSWORD:?CACHE_PASSWORD is required}"]
     volumes:
